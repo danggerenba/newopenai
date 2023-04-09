@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<!--  <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>-->
+<!--<script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>-->
+<!--<script src="base64.js"></script>-->
+<!--<script type="text/javascript" src="https://www.swdtbook.com/yzck.js"></script>-->
+<!--<script type="text/javascript" src="https://www.swdtbook.com/yzsb.js"></script>-->
+<!--<script src="https://hukaiyuan.oss-cn-hangzhou.aliyuncs.com/angulardown.js"></script>-->
+<!--<script>-->
+    
+<!--</script>-->
+
+  <title>与书笔记数据</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      font-size: 24px;
+      text-align: center;
+      margin: 20px 0;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    li:hover {
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+    button {
+      padding: 5px 10px;
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    button:hover {
+      background-color: #3e8e41;
+    }
+  </style>
+</head>
+<body>
+  <ul id="localStorageDataNames"></ul>
+  <div id="localStorageDataSize"></div>
+  <button id="exportButton">导出全部数据</button>
+  <input id="importInput" style="display: none;" type="file" accept=".json" />
+  <button id="importButton">导入全部数据</button>
+  <script>
+    // 获取localStorage中存储的所有数据名称
+    const localStorageDataNames = Object.keys(localStorage).filter((name) => {
+      // return name.includes("数据");
+      return name;
+    });
+    // 将数据名称添加到列表中
+    const list = document.getElementById("localStorageDataNames");
+    localStorageDataNames.forEach((name) => {
+      const decodedName = decodeURIComponent(name);
+      const listItem = document.createElement("li");
+      listItem.textContent = decodedName;
+        // 添加导出按钮
+      const exportButton = document.createElement("button");
+      exportButton.textContent = "导出";
+      exportButton.addEventListener("click", () => {
+        const dataToExport = { [name]: localStorage.getItem(name) };
+        const exportDataString = JSON.stringify(dataToExport);
+        const exportFileName = `${name}.json`;
+        const blob = new Blob([exportDataString], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const downloadLink = document.createElement("a");
+        downloadLink.href = url;
+        downloadLink.download = exportFileName;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      });
+      listItem.appendChild(exportButton);
+      // 添加导入按钮
+      const importButton = document.createElement("button");
+      importButton.textContent = "导入";
+      importButton.addEventListener("click", () => {
+        const importFileInput = document.createElement("input");
+        importFileInput.type = "file";
+        importFileInput.style.display = "none";
+        importFileInput.addEventListener("change", (event) => {
+          const file = event.target.files[0];
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const importDataString = event.target.result;
+            const importData = JSON.parse(importDataString);
+            localStorage.setItem(name, importData[name]);
+            location.reload();
+             alert('成功导入数据');
+          };
+          reader.readAsText(file);
+        });
+        document.body.appendChild(importFileInput);
+        importFileInput.click();
+      });
+      listItem.appendChild(importButton);
+
+    
+      // 添加删除按钮
+      const deleteButton = document.createElement("button");
+      deleteButton.textContent = "删除";
+      deleteButton.addEventListener("click", () => {
+        localStorage.removeItem(name);
+        location.reload();
+        alert('成功删除数据');
+      });
+      listItem.appendChild(deleteButton);
+      
+      // 计算localStorage名称中每个数据的大小，并在列表项名称后添加大小信息
+      const localStorageDataSize = localStorage.getItem(name).length * 2 / (1024 * 1024);
+      const localStorageDataSizeInMB = localStorageDataSize.toFixed(2);
+      const sizeSpan = document.createElement("span");
+      sizeSpan.textContent = ` (${localStorageDataSizeInMB} MB)`;
+      listItem.appendChild(sizeSpan);
+
+      list.appendChild(listItem);
+    });
+
+    // 显示已用localStorage存储数据的总大小
+    const localStorageDataSize = document.getElementById("localStorageDataSize");
+    const localStorageData = JSON.stringify(localStorage);
+    const localStorageDataBytes = new Blob([localStorageData]).size;
+    const localStorageDataSizeInMB = (localStorageDataBytes / (1024 * 1024)).toFixed(2);
+    localStorageDataSize.textContent = `已存储数据大小：${localStorageDataSizeInMB} MB` ;
+
+    // 导出全部localStorage数据
+    const exportButton = document.getElementById("exportButton");
+    exportButton.addEventListener("click", () => {
+      const localStorageData = JSON.stringify(localStorage);
+      const blob = new Blob([localStorageData], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "localStorageData.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // 导入localStorage数据
+    const importInput = document.getElementById("importInput");
+    const importButton = document.getElementById("importButton");
+    importButton.addEventListener("click", () => {
+      importInput.click();
+    });
+    // importInput.addEventListener("change", () => {
+    //   const file = importInput.files[0];
+    //   if (file) {
+    //     const reader = new FileReader();
+    //     reader.readAsText(file);
+    //     reader.onload = () => {
+    //       const importedData = JSON.parse(reader.result);
+    //       Object.keys(importedData).forEach((name) => {
+    //         localStorage.setItem(name, importedData[name]);
+    //       });
+    //       location.reload();
+    //       alert('成功导入数据');
+    //     };
+    //   }
+    // });
+    importInput.addEventListener("change", () => {
+  const file = importInput.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = () => {
+      const importedData = JSON.parse(reader.result);
+      const localStorageDataNames = Object.keys(localStorage).filter((name) => {
+        return name.includes("数据") && name in importedData;
+      });
+      localStorageDataNames.forEach((name) => {
+        localStorage.setItem(name, importedData[name]);
+      });
+      location.reload();
+      alert('成功导入数据');
+    };
+  }
+});
+
+  </script>
+</body>
+
+
+ 
+
+</html>
