@@ -162,9 +162,9 @@ export default () => {
       document.getElementById('total').innerText = currentTotals;
       $.ajax({
         type:'post',
-                            url: 'http://localhost/index/index/addaidata',
+                            url: 'https://www.swdtbook.com/index/index/addaidata',
                             data: {"cookieid":totalname,"totalnum":currentTotals,"countnum":countnum},
-                            // dataType:'json',
+                            dataType:'json',
                             async:false,
                             success: function(data) {
                                 if(data>2){
